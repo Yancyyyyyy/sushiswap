@@ -34,7 +34,7 @@ contract MasterChef is Ownable {
     using SafeERC20 for IERC20;
     // Info of each user.
     struct UserInfo {
-        uint256 amount; // How many LP tokens the user has provided.
+        uint256 amount; // How many LP tokens the user has provided. 用户质押的LP
         uint256 rewardDebt; // Reward debt. See explanation below.
         //
         // We do some fancy math here. Basically, any point in time, the amount of SUSHIs
@@ -46,25 +46,25 @@ contract MasterChef is Ownable {
         //   1. The pool's `accSushiPerShare` (and `lastRewardBlock`) gets updated.
         //   2. User receives the pending reward sent to his/her address.
         //   3. User's `amount` gets updated.
-        //   4. User's `rewardDebt` gets updated.
+        //   4. User's `rewardDebt` gets updated. 用户已获取的奖励
     }
     // Info of each pool.
     struct PoolInfo {
-        IERC20 lpToken; // Address of LP token contract.
-        uint256 allocPoint; // How many allocation points assigned to this pool. SUSHIs to distribute per block.
-        uint256 lastRewardBlock; // Last block number that SUSHIs distribution occurs.
-        uint256 accSushiPerShare; // Accumulated SUSHIs per share, times 1e12. See below.
+        IERC20 lpToken; // Address of LP token contract. 质押LP Token
+        uint256 allocPoint; // How many allocation points assigned to this pool. SUSHIs to distribute per block.规定reward的量
+        uint256 lastRewardBlock; // Last block number that SUSHIs distribution occurs. last time when receive SUSHI rewards
+        uint256 accSushiPerShare; // Accumulated SUSHIs per share, times 1e12. See below. user的实际收益（质押LP时的acc为t,解除质押时的acc为T，最终受益T-t）
     }
     // The SUSHI TOKEN!
     SushiToken public sushi;
-    // Dev address.
+    // Dev address. transaction ？fee distribution add（？）
     address public devaddr;
     // Block number when bonus SUSHI period ends.
     uint256 public bonusEndBlock;
-    // SUSHI tokens created per block.
+    // SUSHI tokens created per block. 挖
     uint256 public sushiPerBlock;
-    // Bonus muliplier for early sushi makers.
-    uint256 public constant BONUS_MULTIPLIER = 10;
+    // Bonus muliplier for early sushi makers.在bonusEndBlock前的奖励获得数量都会乘以10，但是migration以后就没用了
+    uint256 public constant BONUS_MULTIPLIER = 10; 
     // The migrator contract. It has a lot of power. Can only be set through governance (owner).
     IMigratorChef public migrator;
     // Info of each pool.
@@ -84,11 +84,11 @@ contract MasterChef is Ownable {
     );
 
     constructor(
-        SushiToken _sushi,
-        address _devaddr,
-        uint256 _sushiPerBlock,
-        uint256 _startBlock,
-        uint256 _bonusEndBlock
+        SushiToken _sushi,//0x6B3595068778DD592e39A122f4f5a5cF09C90fE2
+        address _devaddr,//0xe94b5eec1fa96ceecbd33ef5baa8d00e4493f4f3
+        uint256 _sushiPerBlock,//100*1e18
+        uint256 _startBlock,//10850000
+        uint256 _bonusEndBlock//10750000
     ) public {
         sushi = _sushi;
         devaddr = _devaddr;
@@ -150,8 +150,8 @@ contract MasterChef is Ownable {
         PoolInfo storage pool = poolInfo[_pid];
         IERC20 lpToken = pool.lpToken;
         uint256 bal = lpToken.balanceOf(address(this));
-        lpToken.safeApprove(address(migrator), bal);
-        IERC20 newLpToken = migrator.migrate(lpToken);
+        lpToken.safeApprove(address(migrator), bal);//approve safety
+        IERC20 newLpToken = migrator.migrate(lpToken);//migrate,new LPToken
         require(bal == newLpToken.balanceOf(address(this)), "migrate: bad");
         pool.lpToken = newLpToken;
     }
